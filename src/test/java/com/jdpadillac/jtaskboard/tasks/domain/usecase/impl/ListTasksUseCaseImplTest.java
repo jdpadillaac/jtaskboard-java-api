@@ -19,7 +19,7 @@ class ListTasksUseCaseImplTest {
 
     @Test
     void shouldReturnTasksFromPort() {
-        JTask task = new JTask(UUID.randomUUID(), "TASK-A1B2C3", "Title", "Desc", TaskStatus.TODO, Instant.now());
+        JTask task = new JTask(UUID.randomUUID(), "TASK-A1B2C3", "Title", "Desc", TaskStatus.TODO, Instant.now(), null);
         when(findAllTasksPort.findAll()).thenReturn(List.of(task));
 
         List<JTask> result = useCase.list();

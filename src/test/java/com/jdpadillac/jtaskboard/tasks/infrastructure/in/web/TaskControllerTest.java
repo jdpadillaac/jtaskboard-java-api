@@ -4,6 +4,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -14,7 +16,9 @@ import com.jdpadillac.jtaskboard.tasks.domain.exception.TaskNotFoundException;
 import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.model.TaskStatus;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.CreateTaskUseCase;
+import com.jdpadillac.jtaskboard.tasks.domain.usecase.DeleteTaskUseCase;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.ListTasksUseCase;
+import com.jdpadillac.jtaskboard.tasks.domain.usecase.UpdateTaskStatusUseCase;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.UpdateTaskUseCase;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.mapper.TaskWebMapperImpl;
 import java.time.Instant;
@@ -44,6 +48,12 @@ class TaskControllerTest {
     @MockitoBean
     private UpdateTaskUseCase updateTaskUseCase;
 
+    @MockitoBean
+    private UpdateTaskStatusUseCase updateTaskStatusUseCase;
+
+    @MockitoBean
+    private DeleteTaskUseCase deleteTaskUseCase;
+
     @Test
     void shouldReturn201WhenRequestIsValid() throws Exception {
         UUID id = UUID.randomUUID();
@@ -55,7 +65,8 @@ class TaskControllerTest {
                 "Configurar CI",
                 "Pipeline con GitHub Actions",
                 TaskStatus.TODO,
-                createdAt
+                createdAt,
+                null
         );
 
         when(createTaskUseCase.create(any())).thenReturn(createdTask);
@@ -93,7 +104,7 @@ class TaskControllerTest {
     void shouldReturn200WithTaskListOnGet() throws Exception {
         UUID id = UUID.randomUUID();
         Instant createdAt = Instant.parse("2026-05-21T10:15:30Z");
-        JTask task = new JTask(id, "TASK-A1B2C3", "Configurar CI", "Pipeline con GitHub Actions", TaskStatus.TODO, createdAt);
+        JTask task = new JTask(id, "TASK-A1B2C3", "Configurar CI", "Pipeline con GitHub Actions", TaskStatus.TODO, createdAt, null);
         when(listTasksUseCase.list()).thenReturn(List.of(task));
 
         mockMvc.perform(get("/api/v1/tasks"))
@@ -122,7 +133,8 @@ class TaskControllerTest {
                 "Nuevo titulo",
                 "Nueva descripcion",
                 TaskStatus.TODO,
-                createdAt
+                createdAt,
+                null
         );
 
         when(updateTaskUseCase.update(any())).thenReturn(updatedTask);
@@ -156,6 +168,82 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"   \",\"description\":\"desc\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn200WhenStatusUpdateIsValid() throws Exception {
+        UUID id = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-05-21T10:30:00Z");
+        JTask updatedTask = new JTask(
+                id,
+                "TASK-A7X2K9",
+                "Titulo",
+                "Descripcion",
+                TaskStatus.IN_PROGRESS,
+                createdAt,
+                null
+        );
+
+        when(updateTaskStatusUseCase.updateStatus(any())).thenReturn(updatedTask);
+
+        mockMvc.perform(patch("/api/v1/tasks/{id}/status", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"IN_PROGRESS\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
+    }
+
+    @Test
+    void shouldReturn404WhenTaskDoesNotExistOnStatusUpdate() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(updateTaskStatusUseCase.updateStatus(any())).thenThrow(new TaskNotFoundException(id));
+
+        mockMvc.perform(patch("/api/v1/tasks/{id}/status", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DONE\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Task not found: " + id));
+    }
+
+    @Test
+    void shouldReturn400WhenStatusIsNullOnStatusUpdate() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/tasks/{id}/status", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenStatusIsInvalidOnStatusUpdate() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/tasks/{id}/status", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"INVALID\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn204WhenDeleteIsSuccessful() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/v1/tasks/{id}", id))
+                .andExpect(status().isNoContent());
+
+        verify(deleteTaskUseCase).delete(id);
+    }
+
+    @Test
+    void shouldReturn404WhenDeleteTaskDoesNotExist() throws Exception {
+        UUID id = UUID.randomUUID();
+        org.mockito.Mockito.doThrow(new TaskNotFoundException(id)).when(deleteTaskUseCase).delete(id);
+
+        mockMvc.perform(delete("/api/v1/tasks/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Task not found: " + id));
     }
 }
 

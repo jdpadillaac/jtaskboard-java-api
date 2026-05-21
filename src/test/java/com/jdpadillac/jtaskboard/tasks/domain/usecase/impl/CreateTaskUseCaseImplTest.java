@@ -38,7 +38,7 @@ class CreateTaskUseCaseImplTest {
         when(existsTaskByKeyPort.existsByTaskKey("TASK-A1B2C3")).thenReturn(false);
         when(saveTaskPort.save(any(JTask.class))).thenAnswer(invocation -> {
             JTask task = invocation.getArgument(0);
-            return new JTask(UUID.randomUUID(), task.taskKey(), task.title(), task.description(), task.status(), task.createdAt());
+            return new JTask(UUID.randomUUID(), task.taskKey(), task.title(), task.description(), task.status(), task.createdAt(), task.deletedAt());
         });
 
         JTask result = useCase.create(command);
@@ -53,6 +53,7 @@ class CreateTaskUseCaseImplTest {
         assertThat(saved.description()).isEqualTo("Pipeline con GitHub Actions");
         assertThat(saved.status()).isEqualTo(TaskStatus.TODO);
         assertThat(saved.createdAt()).isBeforeOrEqualTo(Instant.now());
+        assertThat(saved.deletedAt()).isNull();
 
         assertThat(result.id()).isNotNull();
         assertThat(result.status()).isEqualTo(TaskStatus.TODO);

@@ -2,17 +2,22 @@ package com.jdpadillac.jtaskboard.tasks.infrastructure.in.web;
 
 import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.CreateTaskUseCase;
+import com.jdpadillac.jtaskboard.tasks.domain.usecase.DeleteTaskUseCase;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.ListTasksUseCase;
+import com.jdpadillac.jtaskboard.tasks.domain.usecase.UpdateTaskStatusUseCase;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.UpdateTaskUseCase;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.dto.CreateTaskRequest;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.dto.TaskResponse;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.dto.UpdateTaskRequest;
+import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.dto.UpdateTaskStatusRequest;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.mapper.TaskWebMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +36,8 @@ public class TaskController {
     private final CreateTaskUseCase createTaskUseCase;
     private final ListTasksUseCase listTasksUseCase;
     private final UpdateTaskUseCase updateTaskUseCase;
+    private final UpdateTaskStatusUseCase updateTaskStatusUseCase;
+    private final DeleteTaskUseCase deleteTaskUseCase;
     private final TaskWebMapper taskWebMapper;
 
     @PostMapping
@@ -52,6 +59,21 @@ public class TaskController {
     ) {
         JTask updated = updateTaskUseCase.update(taskWebMapper.toCommand(id, request));
         return ResponseEntity.ok(taskWebMapper.toResponse(updated));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TaskResponse> updateStatus(
+            @PathVariable UUID id,
+            @Validated @RequestBody UpdateTaskStatusRequest request
+    ) {
+        JTask updated = updateTaskStatusUseCase.updateStatus(taskWebMapper.toStatusCommand(id, request));
+        return ResponseEntity.ok(taskWebMapper.toResponse(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        deleteTaskUseCase.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

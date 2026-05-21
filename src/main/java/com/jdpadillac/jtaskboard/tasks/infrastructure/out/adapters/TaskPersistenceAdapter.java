@@ -39,7 +39,7 @@ public class TaskPersistenceAdapter implements SaveTaskPort, ExistsTaskByKeyPort
 
     @Override
     public List<JTask> findAll() {
-        return taskJpaRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+        return taskJpaRepository.findByDeletedAtIsNull(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(taskPersistenceMapper::toDomain)
                 .toList();
@@ -47,7 +47,7 @@ public class TaskPersistenceAdapter implements SaveTaskPort, ExistsTaskByKeyPort
 
     @Override
     public Optional<JTask> findById(UUID id) {
-        return taskJpaRepository.findById(id)
+        return taskJpaRepository.findByIdAndDeletedAtIsNull(id)
                 .map(taskPersistenceMapper::toDomain);
     }
 }

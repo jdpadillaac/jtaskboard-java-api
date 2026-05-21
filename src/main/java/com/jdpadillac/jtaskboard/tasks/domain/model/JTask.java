@@ -9,6 +9,7 @@ public record JTask(
         String title,
         String description,
         TaskStatus status,
-        Instant createdAt
+        Instant createdAt,
+        Instant deletedAt
 ) {
 }

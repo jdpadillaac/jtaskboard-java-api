@@ -31,7 +31,8 @@ public class CreateTaskUseCaseImpl implements CreateTaskUseCase {
                 command.title(),
                 command.description(),
                 TaskStatus.TODO,
-                Instant.now()
+                Instant.now(),
+                null
         );
 
         return saveTaskPort.save(taskToCreate);
