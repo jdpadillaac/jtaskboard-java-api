@@ -2,8 +2,8 @@ package com.jdpadillac.jtaskboard.tasks.domain.port.out;
 
 import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 
-public interface SaveTaskPort {
+import java.util.List;
 
-    JTask save(JTask task);
+public interface FindAllTasksPort {
+    List<JTask> findAll();
 }
-

@@ -1,6 +1,6 @@
 package com.jdpadillac.jtaskboard.tasks.domain.usecase.impl;
 
-import com.jdpadillac.jtaskboard.tasks.domain.model.Task;
+import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.model.TaskStatus;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.ExistsTaskByKeyPort;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.GenerateTaskKeyPort;
@@ -22,10 +22,10 @@ public class CreateTaskUseCaseImpl implements CreateTaskUseCase {
     private final GenerateTaskKeyPort generateTaskKeyPort;
 
     @Override
-    public Task create(CreateTaskCommand command) {
+    public JTask create(CreateTaskCommand command) {
         String taskKey = generateUniqueTaskKey();
 
-        Task taskToCreate = new Task(
+        JTask taskToCreate = new JTask(
                 null,
                 taskKey,
                 command.title(),

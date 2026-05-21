@@ -6,7 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.jdpadillac.jtaskboard.tasks.domain.model.Task;
+import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.model.TaskStatus;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.ExistsTaskByKeyPort;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.GenerateTaskKeyPort;
@@ -36,16 +36,16 @@ class CreateTaskUseCaseImplTest {
 
         when(generateTaskKeyPort.generate()).thenReturn("TASK-A1B2C3");
         when(existsTaskByKeyPort.existsByTaskKey("TASK-A1B2C3")).thenReturn(false);
-        when(saveTaskPort.save(any(Task.class))).thenAnswer(invocation -> {
-            Task task = invocation.getArgument(0);
-            return new Task(UUID.randomUUID(), task.taskKey(), task.title(), task.description(), task.status(), task.createdAt());
+        when(saveTaskPort.save(any(JTask.class))).thenAnswer(invocation -> {
+            JTask task = invocation.getArgument(0);
+            return new JTask(UUID.randomUUID(), task.taskKey(), task.title(), task.description(), task.status(), task.createdAt());
         });
 
-        Task result = useCase.create(command);
+        JTask result = useCase.create(command);
 
-        ArgumentCaptor<Task> taskCaptor = ArgumentCaptor.forClass(Task.class);
+        ArgumentCaptor<JTask> taskCaptor = ArgumentCaptor.forClass(JTask.class);
         verify(saveTaskPort).save(taskCaptor.capture());
-        Task saved = taskCaptor.getValue();
+        JTask saved = taskCaptor.getValue();
 
         assertThat(saved.id()).isNull();
         assertThat(saved.taskKey()).isEqualTo("TASK-A1B2C3");
@@ -65,9 +65,9 @@ class CreateTaskUseCaseImplTest {
         when(generateTaskKeyPort.generate()).thenReturn("TASK-AAAAAA", "TASK-BBBBBB");
         when(existsTaskByKeyPort.existsByTaskKey("TASK-AAAAAA")).thenReturn(true);
         when(existsTaskByKeyPort.existsByTaskKey("TASK-BBBBBB")).thenReturn(false);
-        when(saveTaskPort.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(saveTaskPort.save(any(JTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Task result = useCase.create(command);
+        JTask result = useCase.create(command);
 
         assertThat(result.taskKey()).isEqualTo("TASK-BBBBBB");
         verify(generateTaskKeyPort, times(2)).generate();
