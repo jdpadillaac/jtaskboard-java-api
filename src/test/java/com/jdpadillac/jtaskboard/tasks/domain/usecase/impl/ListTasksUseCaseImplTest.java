@@ -25,7 +25,7 @@ class ListTasksUseCaseImplTest {
         List<JTask> result = useCase.list();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).taskKey()).isEqualTo("TASK-A1B2C3");
+        assertThat(result.getFirst().taskKey()).isEqualTo("TASK-A1B2C3");
     }
 
     @Test
