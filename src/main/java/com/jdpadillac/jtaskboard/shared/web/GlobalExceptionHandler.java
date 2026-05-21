@@ -1,5 +1,6 @@
 package com.jdpadillac.jtaskboard.shared.web;
 
+import com.jdpadillac.jtaskboard.tasks.domain.exception.TaskNotFoundException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,13 +32,22 @@ public class GlobalExceptionHandler {
         return badRequest("Malformed JSON request");
     }
 
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTaskNotFound(TaskNotFoundException ex) {
+        return errorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     private ResponseEntity<Map<String, Object>> badRequest(String details) {
+        return errorResponse(HttpStatus.BAD_REQUEST, details);
+    }
+
+    private ResponseEntity<Map<String, Object>> errorResponse(HttpStatus status, String details) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", Instant.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
         body.put("message", details);
-        return ResponseEntity.badRequest().body(body);
+        return ResponseEntity.status(status).body(body);
     }
 
     private String formatFieldError(FieldError error) {

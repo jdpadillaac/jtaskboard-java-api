@@ -3,6 +3,7 @@ package com.jdpadillac.jtaskboard.tasks.infrastructure.out.adapters;
 import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.ExistsTaskByKeyPort;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.FindAllTasksPort;
+import com.jdpadillac.jtaskboard.tasks.domain.port.out.FindTaskByIdPort;
 import com.jdpadillac.jtaskboard.tasks.domain.port.out.SaveTaskPort;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.out.persistence.TaskEntity;
 import com.jdpadillac.jtaskboard.tasks.infrastructure.out.persistence.TaskJpaRepository;
@@ -11,9 +12,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
-public class TaskPersistenceAdapter implements SaveTaskPort, ExistsTaskByKeyPort, FindAllTasksPort {
+public class TaskPersistenceAdapter implements SaveTaskPort, ExistsTaskByKeyPort, FindAllTasksPort, FindTaskByIdPort {
 
     private final TaskJpaRepository taskJpaRepository;
     private final TaskPersistenceMapper taskPersistenceMapper;
@@ -40,6 +43,12 @@ public class TaskPersistenceAdapter implements SaveTaskPort, ExistsTaskByKeyPort
                 .stream()
                 .map(taskPersistenceMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<JTask> findById(UUID id) {
+        return taskJpaRepository.findById(id)
+                .map(taskPersistenceMapper::toDomain);
     }
 }
 

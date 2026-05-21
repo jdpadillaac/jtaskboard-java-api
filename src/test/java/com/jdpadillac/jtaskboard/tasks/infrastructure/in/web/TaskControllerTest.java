@@ -5,15 +5,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jdpadillac.jtaskboard.tasks.domain.exception.TaskNotFoundException;
 import com.jdpadillac.jtaskboard.tasks.domain.model.JTask;
 import com.jdpadillac.jtaskboard.tasks.domain.model.TaskStatus;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.CreateTaskUseCase;
 import com.jdpadillac.jtaskboard.tasks.domain.usecase.ListTasksUseCase;
-import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.mapper.TaskWebMapper;
+import com.jdpadillac.jtaskboard.tasks.domain.usecase.UpdateTaskUseCase;
+import com.jdpadillac.jtaskboard.tasks.infrastructure.in.web.mapper.TaskWebMapperImpl;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @WebMvcTest(TaskController.class)
-@Import(TaskWebMapper.class)
+@Import(TaskWebMapperImpl.class)
 class TaskControllerTest {
 
     @Autowired
@@ -37,6 +40,9 @@ class TaskControllerTest {
 
     @MockitoBean
     private ListTasksUseCase listTasksUseCase;
+
+    @MockitoBean
+    private UpdateTaskUseCase updateTaskUseCase;
 
     @Test
     void shouldReturn201WhenRequestIsValid() throws Exception {
@@ -104,6 +110,52 @@ class TaskControllerTest {
         mockMvc.perform(get("/api/v1/tasks"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void shouldReturn200WhenUpdateIsValid() throws Exception {
+        UUID id = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-05-21T10:30:00Z");
+        JTask updatedTask = new JTask(
+                id,
+                "TASK-A7X2K9",
+                "Nuevo titulo",
+                "Nueva descripcion",
+                TaskStatus.TODO,
+                createdAt
+        );
+
+        when(updateTaskUseCase.update(any())).thenReturn(updatedTask);
+
+        mockMvc.perform(put("/api/v1/tasks/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Nuevo titulo\",\"description\":\"Nueva descripcion\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.taskKey").value("TASK-A7X2K9"))
+                .andExpect(jsonPath("$.title").value("Nuevo titulo"));
+    }
+
+    @Test
+    void shouldReturn404WhenTaskDoesNotExist() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(updateTaskUseCase.update(any())).thenThrow(new TaskNotFoundException(id));
+
+        mockMvc.perform(put("/api/v1/tasks/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Titulo\",\"description\":\"Descripcion\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Task not found: " + id));
+    }
+
+    @Test
+    void shouldReturn400WhenTitleIsBlankOnUpdate() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(put("/api/v1/tasks/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"   \",\"description\":\"desc\"}"))
+                .andExpect(status().isBadRequest());
     }
 }
 
