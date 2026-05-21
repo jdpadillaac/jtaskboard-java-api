@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: jtaskboard-postgres
+    environment:
+      POSTGRES_DB: jtaskboard
+      POSTGRES_USER: jtaskboard
+      POSTGRES_PASSWORD: jtaskboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - jtaskboard-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jtaskboard -d jtaskboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jtaskboard-postgres-data:
+
