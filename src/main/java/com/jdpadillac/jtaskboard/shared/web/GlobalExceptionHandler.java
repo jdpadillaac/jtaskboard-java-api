@@ -1,5 +1,7 @@
 package com.jdpadillac.jtaskboard.shared.web;
 
+import com.jdpadillac.jtaskboard.auth.domain.exception.EmailAlreadyRegisteredException;
+import com.jdpadillac.jtaskboard.auth.domain.exception.InvalidCredentialsException;
 import com.jdpadillac.jtaskboard.tasks.domain.exception.TaskNotFoundException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -35,6 +37,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TaskNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleTaskNotFound(TaskNotFoundException ex) {
         return errorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
+        return errorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return errorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> badRequest(String details) {
