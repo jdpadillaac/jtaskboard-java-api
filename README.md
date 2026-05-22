@@ -25,6 +25,11 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
+## Documentación Swagger
+
+- UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/api-docs`
+
 ## Probar endpoint
 
 ```bash
