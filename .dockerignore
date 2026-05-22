@@ -1,0 +1,7 @@
+target/
+.idea/
+.git/
+.agents/
+.claude/
+*.iml
+HELP.md

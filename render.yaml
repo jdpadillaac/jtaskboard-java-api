@@ -1,0 +1,34 @@
+databases:
+  - name: jtaskboard-db
+    databaseName: jtaskboard
+    user: jtaskboard
+    plan: free
+
+services:
+  - type: web
+    name: jtaskboard
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api-docs
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: jtaskboard-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: jtaskboard-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: jtaskboard-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: jtaskboard-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: jtaskboard-db
+          property: password
